@@ -94,7 +94,6 @@ func selecting(ctx context.Context, conn *Data.Connection, queries <-chan Models
 						continue
 					}
 					
-					fmt.Println("---- Adding: \n---- ", e)
 					output <- &e
 				case reflect.TypeOf(&Models.Example2{}):
 					var e Models.Example2
@@ -104,7 +103,6 @@ func selecting(ctx context.Context, conn *Data.Connection, queries <-chan Models
 						continue
 					}
 	
-					fmt.Println("---- Adding: \n---- ", e)
 					output <- &e
 				default:
 					panic(fmt.Sprint("query attempting to be selected that is not handled: ", reflect.TypeOf(q)))
@@ -121,7 +119,6 @@ func persist(ctx context.Context, conn *Data.Connection, queries <-chan Models.Q
 	go func(){
 		for q := range queries {
 			for _, sql := range q.DestinationSQL(ctx) {
-				fmt.Println("---- Query\n\t", sql)
 				_, err := conn.DestinationInsert(sql)
 				if err != nil {
 					q.Error(err)
