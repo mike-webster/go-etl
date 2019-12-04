@@ -3,16 +3,19 @@ version: '3.7'
 services:
     sourcedb:
       image: mysql:5.7
+      volumes:
+        - ./sql/:/app/
       networks:
         - example-net
       container_name: source_db
-      command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+      command: /app/sql-entrypoint.sh
       ports:
         - "3306:3306"
       healthcheck:
         test: "exit 0"
       environment:
         MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+        MYSQL_DATABASE: "example"
 
     destinationdb:
         image: mysql:5.7

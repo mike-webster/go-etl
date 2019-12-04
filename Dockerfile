@@ -1,4 +1,4 @@
-FROM golang:1.13
+FROM golang:1.12
 
 WORKDIR /go-etl
 # ENV SRC_DIR=/go/src/github.com/mwebster/go-etl/
@@ -13,4 +13,4 @@ COPY . .
 #RUN cd $SRC_DIR; go build -o myapp
 # RUN cp myapp /go-etl/
 RUN go build -o myetl
-CMD [ "./go-etl/myetl" ]
+CMD [ "./myetl" ]
