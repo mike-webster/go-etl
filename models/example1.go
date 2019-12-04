@@ -24,9 +24,9 @@ func (e *Example1) SourceQuery() string {
 // DestinationSQL will return the sql that needs to be run to persist the information
 // in the Destination database.
 // Note: This will return a slice of sql statements that need to be executed
-func (e *Example1) DestinationSQL(context.Context) []string {
+func (e *Example1) DestinationSQL(ctx context.Context) []string {
 	return []string{
-		fmt.Sprintf("INSERT INTO example1 (source_id, name) VALUES (%v, '%v-transformed');", e.ID, e.Name),
+		fmt.Sprintf(`INSERT INTO example1 (source_id, name) VALUES (%v, '%v-transformed');`, e.ID, e.Name),
 	}
 }
 

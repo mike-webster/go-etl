@@ -5,12 +5,18 @@ import  (
 	"context"
 	"reflect"
 	"fmt"
-    "os"
-	"www.github.com/mike-webster/go-etl/data"
-	"www.github.com/mike-webster/go-etl/models"
+	"os"
+	"time"
+
+	Data "github.com/mike-webster/go-etl/data"
+	Models "github.com/mike-webster/go-etl/models"
 )
 
 func main() {
+	for i := 0; i < 13; i++ {
+		fmt.Println("...sleeping for db setup... {", i, "} ")
+		time.Sleep(1 * time.Second)
+	}
 	fmt.Println("App starting")
 	sdb := os.Getenv("SOURCE_DB_URL")
 	fmt.Println("SOURCE_DB_URL:", sdb)
@@ -24,8 +30,23 @@ func main() {
 		DestinationDBDriverName: "mysql",
 		DestinationDBConnectionString: ddb,
 	}
-	err := conn.Initialize()
+	errs := conn.Initialize()
+	if errs != nil {
+		for _, e := range *errs {
+			fmt.Println(e)
+		}
+		panic("fatal error initializing")
+	}
+
+	err := conn.SourceDB.Ping()
 	if err != nil {
+		fmt.Println("Fatal error pinging source db")
+		panic(err)
+	}
+
+	err = conn.DestinationDB.Ping()
+	if err != nil {
+		fmt.Println("Fatal error pinging destination db")
 		panic(err)
 	}
 
@@ -72,8 +93,9 @@ func selecting(ctx context.Context, conn *Data.Connection, queries <-chan Models
 						q.Error(err)
 						continue
 					}
-	
-					output <- q
+					
+					fmt.Println("---- Adding: \n---- ", e)
+					output <- &e
 				case reflect.TypeOf(&Models.Example2{}):
 					var e Models.Example2
 					err := res.StructScan(&e)
@@ -82,7 +104,8 @@ func selecting(ctx context.Context, conn *Data.Connection, queries <-chan Models
 						continue
 					}
 	
-					output <- q
+					fmt.Println("---- Adding: \n---- ", e)
+					output <- &e
 				default:
 					panic(fmt.Sprint("query attempting to be selected that is not handled: ", reflect.TypeOf(q)))
 				}
@@ -98,6 +121,7 @@ func persist(ctx context.Context, conn *Data.Connection, queries <-chan Models.Q
 	go func(){
 		for q := range queries {
 			for _, sql := range q.DestinationSQL(ctx) {
+				fmt.Println("---- Query\n\t", sql)
 				_, err := conn.DestinationInsert(sql)
 				if err != nil {
 					q.Error(err)

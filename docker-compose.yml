@@ -1,54 +1,65 @@
 version: '3.7'
 
 services:
-    sourcedb:
-      image: mysql:5.7
-      volumes:
-        - ./sql/source/:/docker-entrypoint-initdb.d/
-      networks:
-        - example-net
-      container_name: source_db
-      command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --user=root
-      ports:
-        - "3306:3306"
-      healthcheck:
-        test: "exit 0"
-      environment:
-        MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-        MYSQL_DATABASE: "example"
+  examplesource:
+    image: mysql:5.7
+    volumes:
+      - ./sql/source/:/docker-entrypoint-initdb.d/
+    networks:
+      - example-net
+    container_name: source_db
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    expose: 
+      - "3306"
+    healthcheck:
+      test: "exit 0"
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 1
+      MYSQL_USER: "example"
+      MYSQL_PASSWORD: "pass"
+      MYSQL_DATABASE: "example"
 
-    destinationdb:
-        image: mysql:5.7
-        volumes:
-          - ./sql/destination/:/docker-entrypoint-initdb.d/
-        networks:
-          - example-net
-        container_name: destination_db
-        command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --user=root
-        ports:
-          - "3307:3306"
-        healthcheck:
-          test: "exit 0"
-        environment:
-          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-          MYSQL_DATABASE: "example"
+  exampledestination:
+    image: mysql:5.7
+    volumes:
+      - ./sql/destination/:/docker-entrypoint-initdb.d/
+    networks:
+      - example-net
+    container_name: destination_db
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3307:3306"
+    expose: 
+      - "3306"
+    healthcheck:
+      test: "exit 0"
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 1
+      MYSQL_USER: "example"
+      MYSQL_PASSWORD: "pass"
+      MYSQL_DATABASE: "example"
     
-    app:
-        container_name: example_app
-        networks:
-          - example-net
-        build: 
-            context: .
-        ports:
-            - 3000:3000
-        expose:
-            - 3000
-        depends_on:
-            - sourcedb
-            - destinationdb
-        environment:
-            - SOURCE_DB_URL=mysql2://root@sourcedb:3306?reconnect=true
-            - DESTINATION_DB_URL=mysql2://root@destinationdb:3307?reconnect=true
+  app:
+    container_name: example_app
+    networks:
+      - example-net
+    build: 
+      context: .
+    ports:
+      - 3000:3000
+    expose:
+      - 3000
+    links: 
+      - examplesource
+      - exampledestination
+    depends_on:
+      - examplesource
+      - exampledestination
+    environment:
+      - SOURCE_DB_URL=example:pass@tcp(examplesource:3306)/example
+      - DESTINATION_DB_URL=example:pass@tcp(exampledestination:3306)/example
     
 networks:
     example-net:

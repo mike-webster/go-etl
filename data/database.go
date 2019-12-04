@@ -25,13 +25,14 @@ type Connection struct {
 // Initialize will open database connections with the provided connection strings
 func (db *Connection) Initialize() *[]error {
 	ret := []error{}
-	db1, err := sqlx.Open(db.SourceDBDriverName, db.SourceDBConnectionString)
+	fmt.Println(fmt.Sprintf("-- connection with: %v\n\tto: %v", db.SourceDBDriverName, db.SourceDBConnectionString))
+	db1, err := sqlx.Connect(db.SourceDBDriverName, db.SourceDBConnectionString)
 	db.SourceDB = db1
 	if err != nil {
 		ret = append(ret, err)
 	}
 
-	db2, err := sqlx.Open(db.DestinationDBDriverName, db.DestinationDBConnectionString)
+	db2, err := sqlx.Connect(db.DestinationDBDriverName, db.DestinationDBConnectionString)
 	db.DestinationDB = db2
 	if err != nil {
 		ret = append(ret, err)
@@ -41,6 +42,12 @@ func (db *Connection) Initialize() *[]error {
 		return &ret
 	}
 	return nil
+}
+
+// SourceInsert will run a query against the source database and return the results
+func (db *Connection) SourceInsert(query string) (interface{}, error) {
+	res, err := db.SourceDB.Exec(query)
+	return res, err
 }
 
 // SourceSelect will run a query against the source database and return the results
