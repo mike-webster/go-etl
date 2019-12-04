@@ -18,7 +18,7 @@ type Example1 struct {
 
 // SourceQuery will return the sql that needs to be run against the source database.
 func (e *Example1) SourceQuery() string {
-	return "SELECT id, name FROM example;"
+	return "SELECT id, name FROM example1;"
 }
 
 // DestinationSQL will return the sql that needs to be run to persist the information
@@ -26,7 +26,7 @@ func (e *Example1) SourceQuery() string {
 // Note: This will return a slice of sql statements that need to be executed
 func (e *Example1) DestinationSQL(context.Context) []string {
 	return []string{
-		fmt.Sprintf("INSERT INTO example (source_id, name) VALUES (%v, '%v');", e.ID, e.Name),
+		fmt.Sprintf("INSERT INTO example1 (source_id, name) VALUES (%v, '%v-transformed');", e.ID, e.Name),
 	}
 }
 
